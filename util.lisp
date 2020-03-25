@@ -1,4 +1,4 @@
-(cl:in-package :srfi-67.internal)
+(cl:in-package "https://github.com/g000001/srfi-67#internals")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (progn
@@ -61,7 +61,7 @@
   `(setq ,var ,val))
 
 (declaim (cl:inline list-tail vector-set! list-ref vector->list list->vector
-                    quotient set-car! set-cdr! eqv? equal?
+                    set-car! set-cdr! eqv? equal?
                     assq assv assoc for-each memq))
 
 (defun eqv? (x y)
@@ -239,56 +239,5 @@
 
 (defun boolean? (obj)
   (cl:typep obj '(cl:member cl:t cl:nil)))
-
-
-#||
-(defvar data '(1 1.5 1/2 3+2i a))
-(setq data '(1 1.5 1/2 #c(3 2) a))
-
-(map (lambda (x)
-       (cons x (map (lambda (a)
-                      (list a :=> (if (funcall x a) 't 'nil)))
-                    data)))
-     '(exact?
-       inexact?
-       rational?
-       complex?
-       number?
-       float?))
-(#|(EXACT? (1 :=> T) (1.5 :=> NIL) (1/2 :=> T) (#C(3 2) :=> NIL) (A :=> NIL))|#
- (INEXACT? (1 :=> NIL) (1.5 :=> T) (1/2 :=> NIL) (#C(3 2) :=> T) (A :=> NIL))
- (RATIONAL? (1 :=> T) (1.5 :=> NIL) (1/2 :=> T) (#C(3 2) :=> NIL) (A :=> NIL))
- #|(COMPLEX? (1 :=> T) (1.5 :=> T) (1/2 :=> T) (#C(3 2) :=> T) (A :=> NIL))|#
- #|(NUMBER? (1 :=> T) (1.5 :=> T) (1/2 :=> T) (#C(3 2) :=> T) (A :=> NIL))|#)
-
-(floatp 0d0)
-
-
-((#<subr exact?> (1 :=> t) (1.5 :=> nil) (1/2 :=> t) (3.0+2.0i :=> nil) (a :=> nil))
- (#<subr inexact?> (1 :=> nil) (1.5 :=> t) (1/2 :=> nil) (3.0+2.0i :=> t) (a :=> nil))
- (#<subr rational?> (1 :=> t) (1.5 :=> t) (1/2 :=> t) (3.0+2.0i :=> nil) (a :=> nil))
- (#<subr complex?> (1 :=> t) (1.5 :=> t) (1/2 :=> t) (3.0+2.0i :=> t) (a :=> nil))
- (#<subr number?> (1 :=> t) (1.5 :=> t) (1/2 :=> t) (3.0+2.0i :=> t) (a :=> nil)))
-
-(complex? 3+4i)   ⇒ #t
-(complex? #c(3 4))
-T
-(complex? 3) ;     ⇒ #t
-
-(real? 3)         ⇒ #t
-(real? -2.5+0.0i) ⇒ #t
-(real? #c(2.5 0.0))
-(real? #e1e10)    ⇒ #t
-(integer? 3+0i)   ⇒ #t
-(integer? #c(3 0))
-(integer? 3.0)    ⇒ #t
-(integer? 3.0)
-
-(real? +inf.0)     ⇒ #t
-(real? +nan.0)     ⇒ #t
-(rational? +inf.0) ⇒ #f
-(rational? +nan.0) ⇒ #f
-
-||#
 
 ;;; eof

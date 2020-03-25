@@ -1,9 +1,15 @@
-(cl:in-package :srfi-67.internal)
-;; (in-readtable :srfi-67)
+(cl:in-package "https://github.com/g000001/srfi-67#internals")
 
-(def-suite srfi-67)
+(def-suite* srfi-67)
 
-(in-suite srfi-67)
+
+(defun trim (list)
+  #+lispworks
+  (if (> (length list) call-arguments-limit)
+      (subseq list 0 call-arguments-limit)
+      list)
+  #-lispworks
+  list)
 
 ;;; for runtime checking
 (defvar *1* 1)
@@ -357,9 +363,9 @@
 ; The checks
 ; ==========
 
-(define-function (check..if3)
+(define-function (check$if3)
   ;; basic functionality
-  (test* check..if3
+  (test* check$if3
          (my-check (if3 *-1* 'n 'z 'p) => 'n)
          (my-check (if3  *0* 'n 'z 'p) => 'z)
          (my-check (if3  *1* 'n 'z 'p) => 'p)
@@ -421,7 +427,7 @@
        (my-check (let ((n *0*)) (if-rel? (begin (set! n (+ n 1))  1) T) n) => 1)
        ))))
 
-(define-function (check..ifs)
+(define-function (check$ifs)
 
   (my-check-if2 if=?     =)
   (my-check-if2 if<?     <)
@@ -598,7 +604,7 @@
        (my-check (arguments-used (chain-rel? #'ci *2* 1 0)) => '(0 1 2))
        ))))
 
-(define-function (check..predicates-from-compare)
+(define-function (check$predicates-from-compare)
 
   (my-check-chain2 =?    =)
   (my-check-chain2 <?    <)
@@ -624,12 +630,12 @@
   (my-check-chain chain<=? <=)
   (my-check-chain chain>=? >=)
 ||#
-  ) ; check..predicates-from-compare
+  ) ; check$predicates-from-compare
 
 
 
 ; pairwise-not=?
-(defvar pairwise-not=?..long-sequences
+(defvar pairwise-not=?$long-sequences
   (labels ((extremal-pivot-sequence (r)
            ;; The extremal pivot sequence of order r is a
            ;; permutation of {0..2^(r+1)-2} such that the
@@ -650,7 +656,7 @@
           (list-ec (:- i 4099) (modulo (* 1003 i) 4099))
           (extremal-pivot-sequence 11) )))
 
-(defvar pairwise-not=?..short-sequences
+(defvar pairwise-not=?$short-sequences
   (labels
       ((combinations/repeats (n l)
          ;; return list of all sublists of l of size n,
@@ -704,8 +710,8 @@
                (:let xs-j (vector-ref xs j))
                (not=? compare xs-i xs-j))))
 
-(define-function (check..pairwise-not=?)
-  (test* check..pairwise-not=?
+(define-function (check$pairwise-not=?)
+  (test* check$pairwise-not=?
 
   ; 0-ary, 1-ary
   (my-check (pairwise-not=? #'ci)   => T)
@@ -780,52 +786,49 @@
   ;   trouble in simplistic sorting algorithms:- (0..2^e-1), (2^e+1,2^e..1),
   ;   a pseudo-random permutation, and a sequence with an extremal pivot
   ;   at the center of each subsequence.
-
   (my-check-ec
-   (:list input pairwise-not=?..long-sequences)
+   (:list input pairwise-not=?$long-sequences)
    (cl:let ((compares 0))
      (apply #'pairwise-not=?
             (lambda (x y)
               (set! compares (+ compares 1))
               (ci x y))
-            input)
+            (trim input))
      ;     (display compares) (newline)
      (< compares (* 100 12 4096)))
-   (length input))
+   (length (trim input)))
 
   ; check many short sequences
-
   (my-check-ec
-   (:list input pairwise-not=?..short-sequences)
+   (:list input pairwise-not=?$short-sequences)
    (eq?
-    (apply #'pairwise-not=? #'colliding-compare input)
-    (apply #'naive-pairwise-not=? #'colliding-compare input))
-   input)
+    (apply #'pairwise-not=? #'colliding-compare (trim input))
+    (apply #'naive-pairwise-not=? #'colliding-compare (trim input)))
+   (trim input))
 
   ; check if the arguments are used for short sequences
-
   (my-check-ec
-   (:list input pairwise-not=?..short-sequences)
+   (:list input pairwise-not=?$short-sequences)
    (let ((args '()))
      (apply #'pairwise-not=?
             (lambda (x y)
               (set! args (cons x (cons y args)))
               (colliding-compare x y))
-            input)
-     (equal? (list->set args) (list->set input)))
-   input)
+            (trim input))
+     (equal? (list->set args) (list->set (trim input))))
+   (trim input))
 
   ))
- ; check..pairwise-not=?
+ ; check$pairwise-not=?
 
 ; min/max
 
-(defvar min/max..sequences
-  (append pairwise-not=?..short-sequences
-          pairwise-not=?..long-sequences))
+(defvar min/max$sequences
+  (append pairwise-not=?$short-sequences
+          pairwise-not=?$long-sequences))
 
-(define-function (check..min/max)
-  (test* check..min/max
+(define-function (check$min/max)
+  (test* check$min/max
 
   ; all lists of length 1,2,3
   (my-check (min-compare #'ci 0) => 0)
@@ -874,27 +877,23 @@
 
   ; check for many inputs
   (my-check-ec
-   (:list input min/max..sequences)
-   (= (apply #'min-compare #'ci input)
-      (apply #'min (apply #'max input) input))
-   input)
-  (my-check-ec
-   (:list input min/max..sequences)
-   (= (apply #'max-compare #'ci input)
-      (apply #'max (apply #'min input) input))
-   input)
+   (:list input min/max$sequences)
+   (= (apply #'min-compare #'ci (trim input))
+      (apply #'min (apply #'max (trim input)) (trim input)))
+   (trim input))
+
   ; Note the stupid extra argument in the apply for
   ; the standard min/max makes sure the elements are
   ; identical when apply truncates the arglist.
 
   ))
-;; check..min/max
+;; check$min/max
 
 
 ; kth-largest
 
-(defvar kth-largest..sequences
-  pairwise-not=?..short-sequences)
+(defvar kth-largest$sequences
+  pairwise-not=?$short-sequences)
 
 (define-function (naive-kth-largest compare k . xs)
   (let ((vec (list->vector xs)))
@@ -908,20 +907,20 @@
                    (vector-set! vec (+ i 1) vec-i))))
     (vector-ref vec (modulo k (vector-length vec)))))
 
-(define-function (check..kth-largest)
-  (test* check..kth-largest
+(define-function (check$kth-largest)
+  (test* check$kth-largest
          ;; check extensively against naive-kth-largest
          (my-check-ec
-          (:list input kth-largest..sequences)
+          (:list input kth-largest$sequences)
           (:- k (- -2 (length input)) (+ (length input) 2))
           (= (apply #'naive-kth-largest #'colliding-compare k input)
              (apply #'kth-largest #'colliding-compare k input))
           (list input k))
-         )) ;check..kth-largest
+         )) ;check$kth-largest
 
 ; compare-by< etc. procedures
-(define-function (check..compare-from-predicates)
-  (test* check..compare-from-predicates
+(define-function (check$compare-from-predicates)
+  (test* check$compare-from-predicates
 
   (my-check-compare
    (compare-by< #'<)
@@ -974,11 +973,11 @@
    my-integers)
 
   ))
- ; check..compare-from-predicates
+ ; check$compare-from-predicates
 
-(define-function (check..atomic)
+(define-function (check$atomic)
   (test*
-   check..atomic
+   check$atomic
 
    (my-check-compare #'boolean-compare   my-booleans)
 
@@ -1001,12 +1000,12 @@
    (my-check-compare #'complex-compare   my-complexes)
 
    (my-check-compare #'number-compare    my-complexes)))
-;;; check..atomic
+;;; check$atomic
 
 
-(define-function (check..refine-select-cond)
+(define-function (check$refine-select-cond)
   (test*
-   check..refine-select-cond
+   check$refine-select-cond
 
   ; refine-compare
 
@@ -1143,7 +1142,7 @@
    '(a b c "a" "b" "c"))
 
   ))
- ; check..refine-select-cond
+ ; check$refine-select-cond
 
 
 ; We define our own list/vector data structure
@@ -1162,9 +1161,9 @@
 (define-function (my-size x)          (- (length (my-list-checked x)) 1))
 (define-function (my-ref x i)         (list-ref (my-list-checked x) (+ i 1)))
 
-(define-function (check..data-structures)
+(define-function (check$data-structures)
   (test*
-   check..data-structures
+   check$data-structures
 
   (my-check-compare
    (pair-compare-car #'ci)
@@ -1249,11 +1248,11 @@
   (my-check-compare
    (lambda (x y) (vector-compare-as-list #'ci x y #'my-size #'my-ref))
    (map #'list->my-list my-lists))))
-;;; check..data-structures
+;;; check$data-structures
 
-(define-function (check..default-compare)
+(define-function (check$default-compare)
   (test*
-   check..default-compare
+   check$default-compare
 
    ;(my-check-compare #'default-compare my-objects)
 
@@ -1271,7 +1270,7 @@
 
   ;(my-check-compare (debug-compare #'default-compare) my-objects)
   ))
-;; check..default-compare
+;; check$default-compare
 
 
 
@@ -1288,8 +1287,8 @@
 			      (if (not (funcall pred x (car xs))))
 			      x)
 		     pred))))
-(define-function (check..more-examples)
-  (test* check..more-examples
+(define-function (check$more-examples)
+  (test* check$more-examples
 
   ; define recursive order on tree type (nodes are dotted pairs)
 
@@ -1352,7 +1351,7 @@
   (my-check (sort-by-less '(1 a "b") (<?)) => '("b" a 1))
   (my-check (sort-by-less '(1 a "b") (>?)) => '(1 a "b"))
 
-  )) ; check..more-examples
+  )) ; check$more-examples
 
 
 
@@ -1401,18 +1400,18 @@
 (my-check-reset)
 
 ; comment in/out as needed
-(check..atomic)
-(check..if3)
-(check..ifs)
-(check..predicates-from-compare)
-(check..pairwise-not=?)
-(check..min/max)
-(check..kth-largest)
-(check..compare-from-predicates)
-(check..refine-select-cond)
-(check..data-structures)
-(check..default-compare)
-(check..more-examples)
+(check$atomic)
+(check$if3)
+(check$ifs)
+(check$predicates-from-compare)
+(check$pairwise-not=?)
+(check$min/max)
+(check$kth-largest)
+(check$compare-from-predicates)
+(check$refine-select-cond)
+(check$data-structures)
+(check$default-compare)
+(check$more-examples)
 
 (test my-check-summary
   ;; all examples (99486) correct?
@@ -1422,3 +1421,4 @@
 (sort-by-less '(1 2 3 4) (>=?))
 
 ;;; eof
+

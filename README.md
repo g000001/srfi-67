@@ -1,5 +1,6 @@
-* SRFI 67: Compare Procedures
-- Copyright (c) 2005 Sebastian Egner and Jens Axel S{\o}gaard.
+# SRFI 67 for CL: Compare Procedures
+
+* Copyright (c) 2005 Sebastian Egner and Jens Axel S{\o}gaard.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

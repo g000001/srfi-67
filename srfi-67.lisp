@@ -1,10 +1,7 @@
 ;;;; srfi-67.lisp
 
-(cl:in-package :srfi-67.internal)
+(cl:in-package "https://github.com/g000001/srfi-67#internals")
 
-(def-suite srfi-67)
-
-(in-suite srfi-67)
 
 ; Copyright (c) 2005 Sebastian Egner and Jens Axel S{\o}gaard.
 ;
